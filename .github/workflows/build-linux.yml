@@ -178,3 +178,23 @@ jobs:
           sys.exit(1)
           " | tee test_templatesVersions.py
           python test_templatesVersions.py
+
+      # ── Archive & upload for nightly release ────────
+      # Only runs when called from nightly.yml; skipped on regular CI.
+      - name: Create archive
+        if: ${{ github.workflow == 'Nightly' }}
+        id: archive
+        run: |
+          COMMIT_SHORT=$(git rev-parse --short HEAD)
+          DATE=$(date -u +%Y%m%d)
+          ARCHIVE="AliceVision-nightly-${DATE}-${COMMIT_SHORT}-linux.tar.gz"
+          tar -czf "${ARCHIVE}" -C "$(dirname ${ALICEVISION_ROOT})" "$(basename ${ALICEVISION_ROOT})"
+          echo "filename=${ARCHIVE}" >> $GITHUB_OUTPUT
+ 
+      - name: Upload archive artifact
+        if: ${{ github.workflow == 'Nightly' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-package
+          path: ${{ steps.archive.outputs.filename }}
+          retention-days: 3

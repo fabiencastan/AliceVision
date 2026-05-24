@@ -196,3 +196,24 @@ jobs:
           useVcpkgToolchainFile: true
           buildWithCMake: true
 
+      # ── Archive & upload for nightly release ────────
+      # Only runs when called from nightly.yml; skipped on regular CI.
+      - name: Create archive
+        if: ${{ github.workflow == 'Nightly' }}
+        id: archive
+        shell: pwsh
+        run: |
+          $commitShort = (git rev-parse --short HEAD).Trim()
+          $date = (Get-Date -Format "yyyyMMdd")
+          $archive = "AliceVision-nightly-${date}-${commitShort}-windows.zip"
+          # Adjust $env:ALICEVISION_ROOT to match your cmake install prefix
+          Compress-Archive -Path "$env:ALICEVISION_ROOT\*" -DestinationPath $archive
+          echo "filename=$archive" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+ 
+      - name: Upload archive artifact
+        if: ${{ github.workflow == 'Nightly' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: ${{ steps.archive.outputs.filename }}
+          retention-days: 3
