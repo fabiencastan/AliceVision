@@ -185,6 +185,7 @@ jobs:
         if: ${{ github.workflow == 'Nightly' }}
         id: archive
         run: |
+          git config --global --add safe.directory ${GITHUB_WORKSPACE}
           COMMIT_SHORT=$(git rev-parse --short HEAD)
           DATE=$(date -u +%Y%m%d)
           ARCHIVE="AliceVision-nightly-${DATE}-${COMMIT_SHORT}-linux.tar.gz"
